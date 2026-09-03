@@ -228,7 +228,7 @@ input::placeholder{color:#6B7C74}
 
   // ====== CONFIG ======
   var WEBHOOK   = "https://nitro-app.referenciacapital.tech/webhook/lp-retomar-consorcio";
-  var OBRIGADO  = "lp-prospeccao-obrigado.html";
+  var OBRIGADO  = "https://lp-prospeccao-obrigado.referenciacapital.com.br/"; // dominio proprio da pagina de obrigado: precisa ser URL absoluta
   var ORIGEM_LP = "lp-prospeccao";
   // ====================
 
@@ -348,6 +348,9 @@ input::placeholder{color:#6B7C74}
     qs.set('telefone',payload.telefone_digitos);
     qs.set('origem',ORIGEM_LP);
     if(oculto.fbclid){qs.set('fbclid',oculto.fbclid);}
+    // dominios diferentes nao compartilham cookie: os ids do Meta vao na URL
+    if(oculto.fbp){qs.set('fbp',oculto.fbp);}
+    if(oculto.fbc){qs.set('fbc',oculto.fbc);}
     window.location.href=OBRIGADO+'?'+qs.toString();
   });
 
