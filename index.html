@@ -131,6 +131,19 @@ input::placeholder{color:#6B7C74}
 #form-view.hidden{display:none}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
+<!-- Meta Pixel -->
+<script>
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init','1761905857999115');
+fbq('track','PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1761905857999115&ev=PageView&noscript=1" alt=""></noscript>
+<!-- /Meta Pixel -->
 </head>
 <body>
 <div class="wrap">
@@ -203,13 +216,74 @@ input::placeholder{color:#6B7C74}
   PAISES.forEach(function(p){var o=document.createElement('option');o.value=p.d;o.dataset.pais=p.n;o.textContent=p.f+"  "+p.d+"  "+p.n;ddi.appendChild(o);});
 
   var MAPA={"Europe/Lisbon":"Portugal","Europe/London":"Reino Unido","Europe/Madrid":"Espanha","Europe/Rome":"Itália","Europe/Paris":"França","Europe/Brussels":"Bélgica","Europe/Dublin":"Irlanda","Europe/Zurich":"Suíça","Europe/Berlin":"Alemanha","Europe/Amsterdam":"Holanda","Europe/Luxembourg":"Luxemburgo","America/Sao_Paulo":"Brasil","America/New_York":"Estados Unidos","America/Chicago":"Estados Unidos","America/Denver":"Estados Unidos","America/Los_Angeles":"Estados Unidos","America/Toronto":"Canadá","America/Montevideo":"Uruguai","America/Santiago":"Chile","Asia/Tokyo":"Japão","Australia/Sydney":"Austrália"};
+
+  // ---- mascara de telefone por pais (0 = digito) ----
+  var MASCARAS={
+    "+55":["(00) 0000-0000","(00) 00000-0000"], // fixo e celular
+    "+351":["000 000 000"],
+    "+1":["(000) 000-0000"],
+    "+44":["0000 000000"],
+    "+34":["000 000 000"],
+    "+39":["000 000 0000"],
+    "+33":["0 00 00 00 00"],
+    "+32":["000 00 00 00"],
+    "+353":["00 000 0000"],
+    "+41":["00 000 00 00"],
+    "+49":["0000 0000000"],
+    "+31":["0 00000000"],
+    "+352":["000 000 000"],
+    "+81":["00 0000 0000"],
+    "+61":["000 000 000"],
+    "+598":["00 000 000"],
+    "+56":["0 0000 0000"]
+  };
+  var tel=document.getElementById('tel');
+
+  function modelos(){ return MASCARAS[ddi.value]||null; }
+  // usa o molde mais curto que ainda comporte os digitos digitados
+  function molde(qtd){
+    var ms=modelos();
+    if(!ms){return null;}
+    for(var i=0;i<ms.length;i++){
+      var cabe=(ms[i].match(/0/g)||[]).length;
+      if(qtd<=cabe){return ms[i];}
+    }
+    return ms[ms.length-1];
+  }
+  function formata(valor){
+    var d=valor.replace(/\D/g,'');
+    var m=molde(d.length);
+    if(!m){return d;}                       // "Outro pais": deixa so os digitos
+    var limite=(m.match(/0/g)||[]).length;
+    d=d.slice(0,limite);
+    var saida='',i=0;
+    for(var k=0;k<m.length&&i<d.length;k++){
+      saida+= m[k]==='0' ? d[i++] : m[k];
+    }
+    return saida;
+  }
+  function ajustaCampo(){
+    var ms=modelos();
+    var maior=ms?ms[ms.length-1]:'';
+    tel.setAttribute('placeholder',maior||'Seu número');
+    tel.setAttribute('maxlength',maior?String(maior.length):'20');
+    tel.value=formata(tel.value);
+  }
+  tel.addEventListener('input',function(){
+    var fim=this.selectionStart===this.value.length;
+    this.value=formata(this.value);
+    if(fim){try{this.setSelectionRange(this.value.length,this.value.length);}catch(e){}}
+  });
+  ddi.addEventListener('change',ajustaCampo);
+  ajustaCampo();
+
   var paisDetectado="";
   try{
     var tz=Intl.DateTimeFormat().resolvedOptions().timeZone;
     paisDetectado=MAPA[tz]||"";
     if(paisDetectado){
       var m=PAISES.filter(function(p){return p.n===paisDetectado})[0];
-      if(m){ ddi.value=m.d; }
+      if(m){ ddi.value=m.d; ajustaCampo(); }
     }
   }catch(e){}
 
@@ -337,7 +411,7 @@ input::placeholder{color:#6B7C74}
 
     this.disabled=true; this.innerHTML="Enviando...";
 
-    if(window.fbq){fbq('track','Lead',{content_name:ORIGEM_LP,content_category:oculto.etapa_origem});}
+    // o Lead e disparado na pagina de obrigado, com eventID = lead_id
 
     enviaWebhook(payload);
 
